@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morpion Halloween - Chasse aux Fantômes</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Creepster', cursive, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&display=swap');
+        
+        body {
+            background: url('https://i.ytimg.com/vi/iocgJiMrgOo/hq720.jpg?sqp=-oaymwE7CK4FEIIDSFryq4qpAy0IARUAAAAAGAElAADIQj0AgKJD8AEB-AH-CYAC0AWKAgwIABABGEQgYihlMA8=&rs=AOn4CLAedjQHShyKFHuJw5zpJfK8Ioz_tw') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        
+        .container {
+            background-color: rgba(20, 20, 20, 0.85);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 100, 0, 0.5);
+            width: 100%;
+            max-width: 550px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid #ff6b00;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(45deg, #ff6b00, #ffa500, #ff6b00, #ffa500);
+            z-index: -1;
+            filter: blur(20px);
+            opacity: 0.3;
+        }
+        
+        h1 {
+            color: #ff6b00;
+            margin-bottom: 10px;
+            font-size: 2.8rem;
+            text-shadow: 0 0 10px #ff4500, 0 0 20px #ff4500;
+            letter-spacing: 2px;
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #ff4500, 0 0 20px #ff4500; }
+            to { text-shadow: 0 0 15px #ff4500, 0 0 30px #ff4500, 0 0 40px #ff4500; }
+        }
+        
+        .subtitle {
+            color: #ffa500;
+            margin-bottom: 25px;
+            font-size: 1.3rem;
+            text-shadow: 0 0 5px rgba(255, 165, 0, 0.7);
+        }
+        
+        .game-info {
+            background-color: rgba(40, 40, 40, 0.8);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            border: 1px solid #ff6b00;
+        }
+        
+        .attempts {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #ff6b00;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px rgba(255, 107, 0, 0.7);
+        }
+        
+        .rules {
+            text-align: left;
+            font-size: 1rem;
+            color: #ffa07a;
+            line-height: 1.5;
+        }
+        
+        .rules ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .rules li {
+            margin-bottom: 8px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .cell {
+            aspect-ratio: 1;
+            background: linear-gradient(145deg, #2d2d2d, #1a1a1a);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffa500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            user-select: none;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #444;
+        }
+        
+        .cell:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.7);
+            border-color: #ff6b00;
+        }
+        
+        .cell.selected {
+            background: linear-gradient(145deg, #8b0000, #660000);
+            transform: scale(0.95);
+            border-color: #ff0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
+        }
+        
+        .cell.ghost::after {
+            content: "👻";
+            font-size: 2.8rem;
+            position: absolute;
+            z-index: 2;
+            animation: float 3s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+        
+        .cell.marc {
+            background-image: url('https://i.ibb.co/mCX08Ky7/jackpot-image.jpg');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px black;
+            position: relative;
+        }
+        
+        .cell.marc::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+        
+        .cell.marc::after {
+            content: "MARC";
+            position: relative;
+            z-index: 2;
+            font-size: 1.5rem;
+            color: gold;
+            text-shadow: 0 0 10px gold, 0 0 20px gold;
+            animation: text-glow 2s infinite alternate;
+        }
+        
+        @keyframes text-glow {
+            from { text-shadow: 0 0 5px gold, 0 0 10px gold; }
+            to { text-shadow: 0 0 15px gold, 0 0 30px gold, 0 0 40px gold; }
+        }
+        
+        .cell.selected.ghost {
+            background: linear-gradient(145deg, #4b0082, #8a2be2);
+            border: 3px solid #ff6b00;
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.8);
+        }
+        
+        .cell.selected.marc {
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+            border: 3px solid gold;
+            animation: pulse-gold 1s infinite;
+        }
+        
+        @keyframes pulse-gold {
+            0% { transform: scale(0.95); box-shadow: 0 0 15px gold; }
+            50% { transform: scale(1); box-shadow: 0 0 30px gold; }
+            100% { transform: scale(0.95); box-shadow: 0 0 15px gold; }
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        button:hover::before {
+            left: 100%;
+        }
+        
+        #validate {
+            background: linear-gradient(to right, #ff6b00, #ff4500);
+            color: white;
+            flex: 2;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        #validate:hover {
+            background: linear-gradient(to right, #ff4500, #ff0000);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        #validate:disabled {
+            background: #444;
+            color: #777;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        #restart {
+            background: linear-gradient(to right, #8a2be2, #4b0082);
+            color: white;
+            flex: 1;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        #restart:hover {
+            background: linear-gradient(to right, #4b0082, #2d004d);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s ease;
+        }
+        
+        .success {
+            background-color: rgba(0, 100, 0, 0.7);
+            color: #7fff00;
+            border: 2px solid #7fff00;
+            text-shadow: 0 0 10px #7fff00;
+            animation: pulse 1s infinite;
+        }
+        
+        .error {
+            background-color: rgba(139, 0, 0, 0.7);
+            color: #ff4500;
+            border: 2px solid #ff4500;
+            text-shadow: 0 0 10px #ff4500;
+        }
+        
+        .info {
+            background-color: rgba(30, 30, 70, 0.7);
+            color: #1e90ff;
+            border: 2px solid #1e90ff;
+            text-shadow: 0 0 10px #1e90ff;
+        }
+        
+        .jackpot {
+            background: linear-gradient(45deg, #ff0000, #ff7700, #ffff00, #00ff00, #0000ff, #8a2be2, #ff0000);
+            background-size: 400% 400%;
+            animation: rainbow 2s infinite linear;
+            color: white;
+            border: 3px solid gold;
+            text-shadow: 2px 2px 4px black;
+            font-size: 1.3rem;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .attempt-history {
+            margin-top: 20px;
+            text-align: left;
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: rgba(40, 40, 40, 0.8);
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        
+        .attempt-item {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px dashed #666;
+            color: #ffa07a;
+        }
+        
+        .floating-ghosts {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .floating-ghost {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.3;
+            animation: float-around 15s infinite linear;
+        }
+        
+        @keyframes float-around {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(100px, 50px) rotate(90deg); }
+            50% { transform: translate(50px, 100px) rotate(180deg); }
+            75% { transform: translate(-50px, 50px) rotate(270deg); }
+            100% { transform: translate(0, 0) rotate(360deg); }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .cell {
+                font-size: 1.5rem;
+            }
+            
+            .cell.marc::after {
+                font-size: 1.2rem;
+            }
+            
+            button {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-ghosts">
+        <!-- Les fantômes flottants seront générés par JavaScript -->
+    </div>
+    
+    <div class="container">
+        <h1>MORPION HALLOWEEN</h1>
+        <p class="subtitle">Chasse aux Fantômes et Jackpot "Marc"</p>
+        
+        <div class="game-info">
+            <div class="attempts">Tentative: <span id="attempts-count">1</span> seule chance!</div>
+            <div class="rules">
+                <strong>Règles du jeu :</strong>
+                <ul>
+                    <li>3 fantômes et 3 cases "Marc" sont cachés dans la grille 3x3</li>
+                    <li>Sélectionnez 3 cases et validez votre choix</li>
+                    <li>Vous n'avez qu'UNE seule tentative pour trouver tous les fantômes</li>
+                    <li>Trouvez les 3 cases "Marc" pour gagner le JACKPOT!</li>
+                    <li>Les cases sélectionnées sont marquées en rouge sang</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="grid" id="grid">
+            <!-- Les cellules seront générées par JavaScript -->
+        </div>
+        
+        <div class="controls">
+            <button id="validate" disabled>Valider la sélection</button>
+            <button id="restart">Nouvelle partie</button>
+        </div>
+        
+        <div class="message info" id="message">
+            Sélectionnez 3 cases pour commencer la chasse!
+        </div>
+        
+        <div class="attempt-history" id="attempt-history">
+            <strong>Historique des tentatives :</strong>
+            <div id="attempts-list"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const grid = document.getElementById('grid');
+            const validateBtn = document.getElementById('validate');
+            const restartBtn = document.getElementById('restart');
+            const messageEl = document.getElementById('message');
+            const attemptsCountEl = document.getElementById('attempts-count');
+            const attemptsListEl = document.getElementById('attempts-list');
+            const floatingGhosts = document.querySelector('.floating-ghosts');
+            
+            let selectedCells = [];
+            let ghostPositions = [];
+            let marcPositions = [];
+            let attempts = 1;
+            let gameOver = false;
+            
+            // Créer des fantômes flottants en arrière-plan
+            function createFloatingGhosts() {
+                floatingGhosts.innerHTML = '';
+                for (let i = 0; i < 5; i++) {
+                    const ghost = document.createElement('div');
+                    ghost.className = 'floating-ghost';
+                    ghost.textContent = '👻';
+                    ghost.style.left = Math.random() * 100 + '%';
+                    ghost.style.top = Math.random() * 100 + '%';
+                    ghost.style.animationDelay = Math.random() * 10 + 's';
+                    ghost.style.fontSize = (Math.random() * 2 + 1.5) + 'rem';
+                    floatingGhosts.appendChild(ghost);
+                }
+            }
+            
+            // Initialiser la grille
+            function initializeGrid() {
+                grid.innerHTML = '';
+                selectedCells = [];
+                ghostPositions = generateUniquePositions(3);
+                marcPositions = generateUniquePositions(3, ghostPositions);
+                attempts = 1;
+                gameOver = false;
+                attemptsCountEl.textContent = attempts;
+                attemptsListEl.innerHTML = '';
+                messageEl.className = 'message info';
+                messageEl.textContent = 'Sélectionnez 3 cases pour commencer la chasse!';
+                validateBtn.disabled = true;
+                
+                createFloatingGhosts();
+                
+                for (let i = 1; i <= 9; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.textContent = i;
+                    cell.dataset.index = i;
+                    
+                    cell.addEventListener('click', () => {
+                        if (gameOver) return;
+                        toggleCellSelection(cell);
+                    });
+                    
+                    grid.appendChild(cell);
+                }
+            }
+            
+            // Générer des positions uniques
+            function generateUniquePositions(count, excludePositions = []) {
+                const positions = [];
+                while (positions.length < count) {
+                    const randomPos = Math.floor(Math.random() * 9) + 1;
+                    if (!positions.includes(randomPos) && !excludePositions.includes(randomPos)) {
+                        positions.push(randomPos);
+                    }
+                }
+                return positions;
+            }
+            
+            // Basculer la sélection d'une cellule
+            function toggleCellSelection(cell) {
+                const index = parseInt(cell.dataset.index);
+                
+                if (selectedCells.includes(index)) {
+                    // Désélectionner
+                    selectedCells = selectedCells.filter(i => i !== index);
+                    cell.classList.remove('selected');
+                } else {
+                    // Sélectionner (max 3)
+                    if (selectedCells.length < 3) {
+                        selectedCells.push(index);
+                        cell.classList.add('selected');
+                    } else {
+                        messageEl.className = 'message error';
+                        messageEl.textContent = 'Vous ne pouvez sélectionner que 3 cases maximum';
+                        setTimeout(() => {
+                            messageEl.className = 'message info';
+                            messageEl.textContent = `Sélectionnées: ${selectedCells.join(', ')}`;
+                        }, 2000);
+                        return;
+                    }
+                }
+                
+                // Activer/désactiver le bouton Valider
+                validateBtn.disabled = selectedCells.length !== 3;
+                
+                // Mettre à jour le message
+                if (selectedCells.length > 0) {
+                    messageEl.textContent = `Sélectionnées: ${selectedCells.join(', ')}`;
+                } else {
+                    messageEl.textContent = 'Sélectionnez 3 cases pour commencer la chasse!';
+                }
+            }
+            
+            // Valider la sélection
+            function validateSelection() {
+                if (selectedCells.length !== 3 || gameOver) return;
+                
+                attempts--;
+                attemptsCountEl.textContent = attempts;
+                gameOver = true;
+                
+                // Vérifier combien de fantômes ont été trouvés
+                let foundGhosts = 0;
+                selectedCells.forEach(cellIndex => {
+                    if (ghostPositions.includes(cellIndex)) {
+                        foundGhosts++;
+                    }
+                });
+                
+                // Vérifier combien de cases "Marc" ont été trouvées
+                let foundMarcs = 0;
+                selectedCells.forEach(cellIndex => {
+                    if (marcPositions.includes(cellIndex)) {
+                        foundMarcs++;
+                    }
+                });
+                
+                // Ajouter à l'historique
+                const attemptItem = document.createElement('div');
+                attemptItem.className = 'attempt-item';
+                attemptItem.textContent = `Cases ${selectedCells.join(', ')} - ${foundGhosts} fantôme(s) et ${foundMarcs} Marc(s) trouvé(s)`;
+                attemptsListEl.appendChild(attemptItem);
+                
+                // Révéler les fantômes et les cases Marc
+                ghostPositions.forEach(pos => {
+                    const cell = document.querySelector(`.cell[data-index="${pos}"]`);
+                    cell.classList.add('ghost');
+                });
+                
+                marcPositions.forEach(pos => {
+                    const cell = document.querySelector(`.cell[data-index="${pos}"]`);
+                    cell.classList.add('marc');
+                });
+                
+                // Vérifier si le joueur a gagné le jackpot
+                if (foundMarcs === 3) {
+                    messageEl.className = 'message jackpot';
+                    messageEl.innerHTML = '🎉 JACKPOT! Vous avez trouvé les 3 MARC! 🎉';
+                    validateBtn.disabled = true;
+                    
+                    // Animation spéciale pour le jackpot
+                    document.querySelectorAll('.cell.marc').forEach(cell => {
+                        cell.style.animation = 'pulse-gold 0.5s infinite';
+                    });
+                    return;
+                }
+                
+                // Vérifier si le joueur a gagné
+                if (foundGhosts === 3) {
+                    messageEl.className = 'message success';
+                    messageEl.textContent = 'Félicitations! Vous avez trouvé tous les fantômes!';
+                    validateBtn.disabled = true;
+                    return;
+                }
+                
+                // Le joueur a perdu
+                messageEl.className = 'message error';
+                messageEl.textContent = `Dommage! Vous avez trouvé ${foundGhosts} fantôme(s) sur 3. Essayez encore!`;
+                validateBtn.disabled = true;
+            }
+            
+            // Événements
+            validateBtn.addEventListener('click', validateSelection);
+            restartBtn.addEventListener('click', initializeGrid);
+            
+            // Démarrer le jeu
+            initializeGrid();
+        });
+    </script>
+</body>
+</html>
