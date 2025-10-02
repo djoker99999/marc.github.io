@@ -84,6 +84,59 @@
             text-shadow: 0 0 5px rgba(255, 165, 0, 0.7);
         }
         
+        .jackpot-display {
+            background: linear-gradient(145deg, #1a0a00, #2d1500);
+            border: 3px solid gold;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 20px rgba(255, 215, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .jackpot-display::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .jackpot-label {
+            color: gold;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px gold;
+            margin-bottom: 8px;
+        }
+        
+        .jackpot-amount {
+            color: #fff;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 15px gold, 0 0 30px gold;
+            animation: pulse-jackpot 2s infinite;
+        }
+        
+        @keyframes pulse-jackpot {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .jackpot-coins {
+            color: #ffa500;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
         .game-info {
             background-color: rgba(40, 40, 40, 0.8);
             border-radius: 15px;
@@ -343,6 +396,12 @@
             100% { transform: scale(1); }
         }
         
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
         .attempt-history {
             margin-top: 20px;
             text-align: left;
@@ -395,6 +454,10 @@
                 font-size: 2rem;
             }
             
+            .jackpot-amount {
+                font-size: 2rem;
+            }
+            
             .cell {
                 font-size: 1.5rem;
             }
@@ -419,6 +482,12 @@
         <h1>MORPION HALLOWEEN</h1>
         <p class="subtitle">Chasse aux Fantômes et Jackpot "Marc"</p>
         
+        <div class="jackpot-display">
+            <div class="jackpot-label">💰 JACKPOT POT 💰</div>
+            <div class="jackpot-amount"><span id="jackpot-amount">500</span> 🪙</div>
+            <div class="jackpot-coins">Parties jouées: <span id="games-played">0</span>/5</div>
+        </div>
+        
         <div class="game-info">
             <div class="attempts">Tentative: <span id="attempts-count">1</span> seule chance!</div>
             <div class="rules">
@@ -428,7 +497,7 @@
                     <li>Sélectionnez 3 cases et validez votre choix</li>
                     <li>Vous n'avez qu'UNE seule tentative pour trouver tous les fantômes</li>
                     <li>Trouvez les 3 cases "Marc" pour gagner le JACKPOT!</li>
-                    <li>Les cases sélectionnées sont marquées en rouge sang</li>
+                    <li>Le jackpot augmente de 1 🪙 toutes les 5 parties!</li>
                 </ul>
             </div>
         </div>
@@ -461,12 +530,16 @@
             const attemptsCountEl = document.getElementById('attempts-count');
             const attemptsListEl = document.getElementById('attempts-list');
             const floatingGhosts = document.querySelector('.floating-ghosts');
+            const jackpotAmountEl = document.getElementById('jackpot-amount');
+            const gamesPlayedEl = document.getElementById('games-played');
             
             let selectedCells = [];
             let ghostPositions = [];
             let marcPositions = [];
             let attempts = 1;
             let gameOver = false;
+            let jackpotAmount = 500;
+            let gamesPlayed = 0;
             
             // Créer des fantômes flottants en arrière-plan
             function createFloatingGhosts() {
@@ -483,6 +556,31 @@
                 }
             }
             
+            // Mettre à jour l'affichage du jackpot
+            function updateJackpotDisplay() {
+                jackpotAmountEl.textContent = jackpotAmount;
+                gamesPlayedEl.textContent = gamesPlayed % 5;
+            }
+            
+            // Incrémenter le compteur de parties et le jackpot
+            function incrementGameCounter() {
+                gamesPlayed++;
+                
+                // Augmenter le jackpot de 1 toutes les 5 parties
+                if (gamesPlayed % 5 === 0) {
+                    jackpotAmount++;
+                    
+                    // Animation spéciale quand le jackpot augmente
+                    const jackpotDisplay = document.querySelector('.jackpot-display');
+                    jackpotDisplay.style.animation = 'pulse 0.5s ease-in-out 3';
+                    setTimeout(() => {
+                        jackpotDisplay.style.animation = '';
+                    }, 1500);
+                }
+                
+                updateJackpotDisplay();
+            }
+            
             // Initialiser la grille
             function initializeGrid() {
                 grid.innerHTML = '';
@@ -492,7 +590,6 @@
                 attempts = 1;
                 gameOver = false;
                 attemptsCountEl.textContent = attempts;
-                attemptsListEl.innerHTML = '';
                 messageEl.className = 'message info';
                 messageEl.textContent = 'Sélectionnez 3 cases pour commencer la chasse!';
                 validateBtn.disabled = true;
@@ -569,6 +666,9 @@
                 attemptsCountEl.textContent = attempts;
                 gameOver = true;
                 
+                // Incrémenter le compteur de parties
+                incrementGameCounter();
+                
                 // Vérifier combien de fantômes ont été trouvés
                 let foundGhosts = 0;
                 selectedCells.forEach(cellIndex => {
@@ -605,7 +705,7 @@
                 // Vérifier si le joueur a gagné le jackpot
                 if (foundMarcs === 3) {
                     messageEl.className = 'message jackpot';
-                    messageEl.innerHTML = '🎉 JACKPOT! Vous avez trouvé les 3 MARC! 🎉';
+                    messageEl.innerHTML = `🎉 JACKPOT! Vous avez gagné ${jackpotAmount} pièces! 🎉`;
                     validateBtn.disabled = true;
                     
                     // Animation spéciale pour le jackpot
@@ -631,10 +731,14 @@
             
             // Événements
             validateBtn.addEventListener('click', validateSelection);
-            restartBtn.addEventListener('click', initializeGrid);
+            restartBtn.addEventListener('click', () => {
+                initializeGrid();
+                attemptsListEl.innerHTML = '';
+            });
             
             // Démarrer le jeu
             initializeGrid();
+            updateJackpotDisplay();
         });
     </script>
 </body>
